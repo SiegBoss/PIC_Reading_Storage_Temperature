@@ -9,6 +9,7 @@
 #include <lcd.c>
 #include <2432.c>
 #include <stdlib.h>
+#use standard_io(C)
 #use fast_io(D)
 
 // Variables a utilizar | Variables to use
@@ -18,7 +19,7 @@ int16 temperatureRead, option;
 float temperature, time, dataMemory;
 
 // Funcion para imprimir en el Puerto Serial | Function to print on the Serial Port
-void imprimir()
+void printText()
 {
     printf("\f .: Lectura y Almacenamiento de la Temperatura :. \r\n\n");
     printf(" 1) Leer los Datos Almacenados \n\r");
@@ -26,7 +27,7 @@ void imprimir()
 }
 
 // Funcion para leer la temperatura | Function to read the temperature
-void temperatura()
+void temperatureFunction()
 {
     set_adc_channel(0);
     temperatureRead = read_adc();
@@ -35,7 +36,7 @@ void temperatura()
 
 // Funcion para la interrupcion del Timer1 | Function for the Timer1 interruption
 #int_TIMER1
-void Reloj(void)
+void timeFunction(void)
 {
     set_timer1(3200);
 
@@ -61,8 +62,10 @@ void Reloj(void)
             printf(lcd_putc, "\fGuardando Dato...");
             delay_ms(1000);
 
-            temperatura();
+            // Leer la temperatura | Read the temperature
+            temperatureFunction();
 
+            // Guardar los datos | Save the data
             WRITE_EXT_EEPROM(i2, temperature);
 
             i2++;
@@ -89,12 +92,16 @@ void opcion()
     {
         for (i = 0; i < data; i++)
         {
+            // Leer los datos almacenados | Read the stored data
             dataMemory = READ_EXT_EEPROM(i);
             printf("\r\nDato No. %i = %f\r", i, dataMemory);
         }
+
         delay_ms(3000);
+
+        // Imprimir el Puerto Serial | Print the Serial Port
         printf("\f");
-        imprimir();
+        printText();
     }
 
     //Si la opcion es 2 fija el tiempo de muestreo | If the option is 2 sets the sampling time
@@ -109,9 +116,9 @@ void opcion()
         printf("\r\n\n El Tiempo De Muestreo es de %2.0f Segundos \r\n", time);
         delay_ms(2000);
 
+        // Imprimir el Puerto Serial | Print the Serial Port
         printf("\f");
-
-        imprimir();
+        printText();
     }
 }
 
@@ -132,15 +139,14 @@ void main()
     enable_interrupts(global);
     // Inicializar el LCD | Initialize the LCD
     lcd_init();
-
     // Imprimir el Puerto Serial | Print the Serial Port
-    imprimir();
+    printText();
 
     // Ciclo Infinito | Infinite Cycle
     while (true)
     {
         // Leer la temperatura | Read the temperature
-        temperatura();
+        temperatureFunction();
 
         // Imprimir en el LCD | Print on the LCD
         lcd_gotoxy(1, 1);
